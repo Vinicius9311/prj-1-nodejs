@@ -1,28 +1,23 @@
 import http from 'node:http'
+import { json } from './middlewares/json.js'
+import { routes } from './routes.js'
 
 // Cabeçalhos Headers -> Requisição e resposta são metadados
 
-const users = []
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
 
+  await json(req, res)
   const { method, url } = req
 
-  if (method === 'GET' && url === '/users') {
-    return res
-      .setHeader('Content-type', 'application/json')
-      .end(JSON.stringify(users))
-  }
+  const route = routes.find(route => {
+    return method === route.method && url === route.url 
+  })
 
-  if (method === 'POST' && url === '/user') {
+  console.log(route)
 
-    users.push({
-      id: 1,
-      name: 'John Doe',
-      email: 'johndoe@example.com'
-    })
-
-    return res.writeHead(201).end()
+  if (route) {
+    return route.handler(req, res)
   }
 
   return res.writeHead(404).end()
